@@ -15,7 +15,7 @@ df[df['passenger_count'] <= 0]#异常检查
 
 #清洗数据
 df = df[df['trip_distance'] > 0]#删除异常值
-df = df[df['fare_amount'] > 0]
+df = df[df['fare_amount'] > 0]#原因：出租车行程距离、费用、旅客数不可能小于等于0，这类数据属于异常值，会影响后续分析
 df = df[df['passenger_count'] > 0]
 df = df.dropna()#删除缺失严重的数据
 
