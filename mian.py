@@ -1,4 +1,5 @@
 
+
 #M1 数据处理
 #加载数据
 import pandas as pd
@@ -31,3 +32,35 @@ df['is_weekend'] = df['weekday'].apply(lambda x: 1 if x >= 5 else 0)
 df['duration'] = (pd.to_datetime(df['tpep_dropoff_datetime']) -pd.to_datetime(df['tpep_pickup_datetime'])).dt.total_seconds() / 60
 #补充3：单位距离价格
 df['fare_per_km'] = df['fare_amount'] / df['trip_distance']
+
+
+#M2:分析可视化
+import matplotlib.pyplot as plt
+
+#图1：出行需求时间规律
+#按小时
+hourly_orders = df.groupby('hour').size() #按小时统计订单
+plt.figure(figsize=(10,5))
+hourly_orders.plot()
+
+plt.xlabel('Hour')#完善图像名称
+plt.ylabel('Number of Trips')
+plt.title('Hourly Taxi Demand')
+
+plt.savefig('hourly_demand.png')#保存
+plt.show()
+plt.close()
+#按周末、工作日分
+week_data = df.groupby('is_weekend').size()#统计订单
+plt.figure(figsize=(6,5))
+
+plt.bar(['Weekday', 'Weekend'],
+        week_data.values)
+
+plt.xlabel('Type')
+plt.ylabel('Number of Trips')
+plt.title('Weekday vs Weekend Taxi Demand')
+
+plt.savefig('weekend_weekday.png')
+plt.show()
+plt.close()
