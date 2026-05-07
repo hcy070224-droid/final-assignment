@@ -37,7 +37,7 @@ df['fare_per_km'] = df['fare_amount'] / df['trip_distance']
 #M2:分析可视化
 import matplotlib.pyplot as plt
 
-#图1：出行需求时间规律
+#1.出行需求时间规律
 #按小时
 hourly_orders = df.groupby('hour').size() #按小时统计订单
 plt.figure(figsize=(10,5))
@@ -62,5 +62,90 @@ plt.ylabel('Number of Trips')
 plt.title('Weekday vs Weekend Taxi Demand')
 
 plt.savefig('weekend_weekday.png')
+plt.show()
+plt.close()
+
+#2.区域热度分析
+#上车
+top_pickup = df['PULocationID'].value_counts().head(10)#统计数据
+plt.figure(figsize=(10,5))
+#画图
+top_pickup.plot(kind='bar')
+plt.xlabel('Pickup Location')
+plt.ylabel('Trips')
+plt.title('Top 10 Pickup Locations')
+
+plt.savefig('top_Pickup.png')
+plt.show()
+plt.close()
+#下车
+top_dropoff = df['DOLocationID'].value_counts().head(10)
+top_dropoff.plot(kind='bar')
+plt.xlabel('Dropoff Location')
+plt.ylabel('Trips')
+plt.title('Top 10 Dropoff Locations')
+
+plt.savefig('top_Dropoff.png')
+plt.show()
+plt.close()
+
+# 3. 车费影响因素分析
+# 距离与车费关系
+sample_df = df.sample(10000)#随机采样
+#去除异常值
+sample_df = sample_df[
+    (sample_df['trip_distance'] > 0) &
+    (sample_df['trip_distance'] < 30) &
+    (sample_df['fare_amount'] > 0) &
+    (sample_df['fare_amount'] < 100)
+]
+#创建画布
+plt.figure(figsize=(8,5))
+
+plt.scatter(#散点图
+    sample_df['trip_distance'],
+    sample_df['fare_amount'],
+    alpha=0.3,
+    s=3
+)
+#设置标签
+plt.xlabel('Trip Distance')
+plt.ylabel('Fare Amount')
+plt.title('Distance vs Fare')
+plt.savefig('fare_distance.png')#保存图片
+plt.show()
+plt.close()
+#时间段与车费
+hour_fare = df.groupby('hour')['fare_amount'].mean()
+plt.figure(figsize=(10,5))
+#折线图
+plt.plot(
+    hour_fare.index,
+    hour_fare.values
+)
+
+plt.xlabel('Hour')
+plt.ylabel('Average Fare')
+plt.title('Average Fare by Hour')
+
+plt.savefig('hour_fare.png')
+plt.show()
+plt.close()
+#乘车人数与车费
+passenger_fare = df.groupby(
+    'passenger_count'
+)['fare_amount'].mean()#统计平均车费
+plt.figure(figsize=(8,5))
+#柱状图
+plt.bar(
+    passenger_fare.index.astype(str),
+    passenger_fare.values
+)
+
+plt.xlabel('Passenger Count')
+plt.ylabel('Average Fare')
+plt.title('Passenger Count vs Average Fare')
+
+plt.savefig('passenger_fare.png')
 plt.show()
 plt.close()
