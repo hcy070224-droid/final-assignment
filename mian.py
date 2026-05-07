@@ -149,3 +149,30 @@ plt.title('Passenger Count vs Average Fare')
 plt.savefig('passenger_fare.png')
 plt.show()
 plt.close()
+#自选：不同时间段平均速度变化
+#研究一天中，什么时候车速最快/最慢
+df['speed'] = df['trip_distance'] / (
+    df['duration'] / 60
+)
+#去除异常速度
+df = df[
+    (df['speed'] > 0) &
+    (df['speed'] < 100)
+]
+speed_by_hour = df.groupby('hour')[
+    'speed'
+].mean()#统计
+plt.figure(figsize=(10,5))
+
+plt.plot(
+    speed_by_hour.index,
+    speed_by_hour.values
+)
+
+plt.xlabel('Hour')
+plt.ylabel('Average Speed')
+plt.title('Average Speed by Hour')
+
+plt.savefig('speed_hour.png')
+plt.show()
+plt.close()
