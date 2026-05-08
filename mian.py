@@ -176,3 +176,130 @@ plt.title('Average Speed by Hour')
 plt.savefig('speed_hour.png')
 plt.show()
 plt.close()
+
+#M3:预测模型
+import tensorflow as tf
+#1.构建数据
+#提取时间特征
+df['pickup_datetime'] = pd.to_datetime(
+    df['tpep_pickup_datetime']
+)
+
+df['hour'] = df['pickup_datetime'].dt.hour
+
+df['weekday'] = df['pickup_datetime'].dt.weekday
+#统计
+demand_df = df.groupby(
+    ['PULocationID', 'hour', 'weekday']
+).size().reset_index(name='demand')
+#设置x和y
+X = demand_df[
+    ['PULocationID', 'hour', 'weekday']
+]
+y = demand_df['demand']
+X = pd.get_dummies(
+    X,
+    columns=['PULocationID']
+)
+
+X = X.astype('float32')#把区域编号变成模型能理解的数字特征
+#2.划分训练测试集
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
+)#8：2
+#3.神经网络
+#建立模型
+from keras.models import Sequential
+from keras.layers import Dense
+
+model = Sequential([
+    Dense(64, activation='relu'),
+    Dense(32, activation='relu'),
+    Dense(1)
+])
+#编译
+model.compile(
+    optimizer='adam',
+    loss='mse',
+    metrics=['mae']
+)
+#训练
+#history 用来画曲线
+#validation_split=0.2用于验证集
+history = model.fit(
+    X_train,
+    y_train,
+    epochs=20,
+    batch_size=32,
+    validation_split=0.2
+)
+#画loss曲线
+plt.figure(figsize=(8,5))
+
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend(['Train', 'Validation'])
+plt.show()
+#测试集预测
+y_pred_nn = model.predict(X_test)
+#计算MAE与RMSE
+#MAE
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+import numpy as np
+
+mae_nn = mean_absolute_error(
+    y_test,
+    y_pred_nn
+)
+#RMSE
+rmse_nn = np.sqrt(
+    mean_squared_error(
+        y_test,
+        y_pred_nn
+    )
+)
+#4.随机森林进行对比
+#训练模型
+from sklearn.ensemble import RandomForestRegressor
+
+rf = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42
+)
+
+rf.fit(X_train, y_train)
+y_pred_rf = rf.predict(X_test)#预测
+#指标计算
+mae_rf = mean_absolute_error(
+    y_test,
+    y_pred_rf
+)
+
+rmse_rf = np.sqrt(
+    mean_squared_error(
+        y_test,
+        y_pred_rf
+    )
+)
+#对比图
+models = ['RF', 'NN']
+mae_values = [mae_rf, mae_nn]
+plt.bar(models, mae_values)
+plt.ylabel('MAE')
+plt.show()
+models = ['Random Forest', 'Neural Network']
+rmse_values = [rmse_rf, rmse_nn]
+plt.figure(figsize=(6,5))
+plt.bar(models, rmse_values)
+plt.ylabel('RMSE')
+plt.title('RMSE')
+plt.show()
