@@ -48,7 +48,6 @@ plt.ylabel('Number of Trips')
 plt.title('Hourly Taxi Demand')
 
 plt.savefig('hourly_demand.png')#保存
-plt.show()
 plt.close()
 #按周末、工作日分
 week_data = df.groupby('is_weekend').size()#统计订单
@@ -62,7 +61,6 @@ plt.ylabel('Number of Trips')
 plt.title('Weekday vs Weekend Taxi Demand')
 
 plt.savefig('weekend_weekday.png')
-plt.show()
 plt.close()
 
 #2.区域热度分析
@@ -76,7 +74,6 @@ plt.ylabel('Trips')
 plt.title('Top 10 Pickup Locations')
 
 plt.savefig('top_Pickup.png')
-plt.show()
 plt.close()
 #下车
 top_dropoff = df['DOLocationID'].value_counts().head(10)
@@ -86,7 +83,6 @@ plt.ylabel('Trips')
 plt.title('Top 10 Dropoff Locations')
 
 plt.savefig('top_Dropoff.png')
-plt.show()
 plt.close()
 
 # 3. 车费影响因素分析
@@ -113,7 +109,6 @@ plt.xlabel('Trip Distance')
 plt.ylabel('Fare Amount')
 plt.title('Distance vs Fare')
 plt.savefig('fare_distance.png')#保存图片
-plt.show()
 plt.close()
 #时间段与车费
 hour_fare = df.groupby('hour')['fare_amount'].mean()
@@ -129,7 +124,6 @@ plt.ylabel('Average Fare')
 plt.title('Average Fare by Hour')
 
 plt.savefig('hour_fare.png')
-plt.show()
 plt.close()
 #乘车人数与车费
 passenger_fare = df.groupby(
@@ -147,7 +141,6 @@ plt.ylabel('Average Fare')
 plt.title('Passenger Count vs Average Fare')
 
 plt.savefig('passenger_fare.png')
-plt.show()
 plt.close()
 #自选：不同时间段平均速度变化
 #研究一天中，什么时候车速最快/最慢
@@ -174,7 +167,6 @@ plt.ylabel('Average Speed')
 plt.title('Average Speed by Hour')
 
 plt.savefig('speed_hour.png')
-plt.show()
 plt.close()
 
 #M3:预测模型
@@ -247,7 +239,8 @@ plt.plot(history.history['val_loss'])
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend(['Train', 'Validation'])
-plt.show()
+plt.savefig('loss_curve.png')
+plt.close()
 #测试集预测
 y_pred_nn = model.predict(X_test)
 #计算MAE与RMSE
@@ -295,11 +288,104 @@ models = ['RF', 'NN']
 mae_values = [mae_rf, mae_nn]
 plt.bar(models, mae_values)
 plt.ylabel('MAE')
-plt.show()
+plt.title('MAE')
+
 models = ['Random Forest', 'Neural Network']
 rmse_values = [rmse_rf, rmse_nn]
 plt.figure(figsize=(6,5))
 plt.bar(models, rmse_values)
 plt.ylabel('RMSE')
 plt.title('RMSE')
-plt.show()
+
+#M4:问答接口
+
+#1.将M1-M3定义函数
+def query_hour_demand(hour):#某小时订单量
+    result = df[df['hour'] == hour].shape[0]
+
+    return f'''{hour}点订单量为：{result}
+相关图表:hourly_demand.png'''
+def top_pickup_locations():#热门区域
+    top = df['PULocationID'].value_counts().head(5)
+    return f'''热门区域：{top}
+相关图表:top_Pickup.png'''
+def average_fare(hour):#平均车费
+    result = df[df['hour'] == hour][
+        'fare_amount'
+    ].mean()
+    return f'''{hour}点平均车费为：{result:.2f}
+相关图表:hour_fare.png'''
+def peak_hour_analysis():
+    hourly_orders = df.groupby('hour').size()
+    peak_hour = hourly_orders.idxmax()
+    peak_value = hourly_orders.max()
+    return f'''最高峰时段为：{peak_hour}点，订单量为：{peak_value}
+相关图表:hourly_demand.png'''
+
+#预测需求
+def predict_demand(zone, hour, weekday):
+    input_df = pd.DataFrame({
+        'PULocationID':[zone],
+        'hour':[hour],
+        'weekday':[weekday]
+    })
+
+    input_df = pd.get_dummies(
+        input_df,
+        columns=['PULocationID']
+    )
+
+    input_df = input_df.reindex(
+        columns=X.columns,
+        fill_value=0
+    )
+
+    pred = model.predict(
+        input_df.astype('float32')
+    )
+
+    return pred[0][0]
+#问答系统
+import re
+while True:
+    question = input('请输入问题(q退出):')
+    if question == 'q':#问题匹配
+        break
+    elif '订单量' in question:#订单量查询
+        nums = re.findall(r'\d+', question)
+        if len(nums) == 0:
+            print('请输入小时，例如：10点订单量')
+        else:
+            hour = int(nums[0])
+            result = query_hour_demand(hour)
+            print(result)
+    elif '热门区域' in question:#热门区域查询
+        print(top_pickup_locations())
+    elif '平均车费' in question:#平均车费查询
+        nums = re.findall(r'\d+', question)
+        if len(nums) == 0:
+            print('请输入小时，例如：10点平均车费')
+        else:
+            hour = int(nums[0])
+            result = average_fare(hour)
+            print(result)
+    elif '预测' in question:#需求预测
+        nums = re.findall(r'\d+', question)
+        if len(nums) < 3:
+            print('请输入：预测 区域 小时 星期')
+            print('例如：预测 236 10 2')
+        else:
+            zone = int(nums[0])
+            hour = int(nums[1])
+            weekday = int(nums[2])
+            result = predict_demand(
+                zone,
+                hour,
+                weekday
+            )
+            print('预测需求量:', result)
+    elif '高峰期' in question:
+        result = peak_hour_analysis()
+        print(result)
+    else:
+        print('无法识别问题')
