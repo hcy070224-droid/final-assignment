@@ -345,6 +345,42 @@ def predict_demand(zone, hour, weekday):
     )
 
     return pred[0][0]
+#大模型导入
+from openai import OpenAI
+client = OpenAI(
+    api_key='sk-ee0d09f4cb8240f49f029acf4a520330',
+    base_url='https://api.deepseek.com'
+)
+
+def ask_ai(question):
+
+    response = client.chat.completions.create(
+        model='deepseek-chat',
+
+        messages=[
+            {
+                'role':'system',
+                'content':'''
+你是一个纽约出租车数据分析助手。
+
+你的任务：
+1.解释出租车数据分析结果
+2.回答用户关于订单量、车费、高峰期的问题
+3.用简洁自然语言回答
+4.如果用户问题与出租车无关，也礼貌回答
+'''
+            },
+
+            {
+                'role':'user',
+                'content':question
+            }
+        ],
+
+        temperature=0.7
+    )
+
+    return response.choices[0].message.content
 #问答系统
 import re
 while True:
@@ -388,4 +424,10 @@ while True:
         result = peak_hour_analysis()
         print(result)
     else:
-        print('无法识别问题')
+        try:
+            answer = ask_ai(question)
+            print(answer)
+
+        except Exception as e:
+            print('大模型调用失败')
+            print(e)
