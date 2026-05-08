@@ -5,7 +5,7 @@
 import pandas as pd
 import pyarrow.parquet as pq
 
-table = pq.read_table('yellow_tripdata_2023-01.parquet')
+table = pq.read_table('data/yellow_tripdata_2023-01.parquet')
 df = table.to_pandas()
 
 #数据质量报告
@@ -47,7 +47,7 @@ plt.xlabel('Hour')#完善图像名称
 plt.ylabel('Number of Trips')
 plt.title('Hourly Taxi Demand')
 
-plt.savefig('hourly_demand.png')#保存
+plt.savefig('outputs/hourly_demand.png')#保存
 plt.close()
 #按周末、工作日分
 week_data = df.groupby('is_weekend').size()#统计订单
@@ -60,7 +60,7 @@ plt.xlabel('Type')
 plt.ylabel('Number of Trips')
 plt.title('Weekday vs Weekend Taxi Demand')
 
-plt.savefig('weekend_weekday.png')
+plt.savefig('outputs/weekend_weekday.png')
 plt.close()
 
 #2.区域热度分析
@@ -73,7 +73,7 @@ plt.xlabel('Pickup Location')
 plt.ylabel('Trips')
 plt.title('Top 10 Pickup Locations')
 
-plt.savefig('top_Pickup.png')
+plt.savefig('outputs/top_Pickup.png')
 plt.close()
 #下车
 top_dropoff = df['DOLocationID'].value_counts().head(10)
@@ -82,7 +82,7 @@ plt.xlabel('Dropoff Location')
 plt.ylabel('Trips')
 plt.title('Top 10 Dropoff Locations')
 
-plt.savefig('top_Dropoff.png')
+plt.savefig('outputs/top_Dropoff.png')
 plt.close()
 
 # 3. 车费影响因素分析
@@ -108,7 +108,7 @@ plt.scatter(#散点图
 plt.xlabel('Trip Distance')
 plt.ylabel('Fare Amount')
 plt.title('Distance vs Fare')
-plt.savefig('fare_distance.png')#保存图片
+plt.savefig('outputs/fare_distance.png')#保存图片
 plt.close()
 #时间段与车费
 hour_fare = df.groupby('hour')['fare_amount'].mean()
@@ -123,7 +123,7 @@ plt.xlabel('Hour')
 plt.ylabel('Average Fare')
 plt.title('Average Fare by Hour')
 
-plt.savefig('hour_fare.png')
+plt.savefig('outputs/hour_fare.png')
 plt.close()
 #乘车人数与车费
 passenger_fare = df.groupby(
@@ -140,7 +140,7 @@ plt.xlabel('Passenger Count')
 plt.ylabel('Average Fare')
 plt.title('Passenger Count vs Average Fare')
 
-plt.savefig('passenger_fare.png')
+plt.savefig('outputs/passenger_fare.png')
 plt.close()
 #自选：不同时间段平均速度变化
 #研究一天中，什么时候车速最快/最慢
@@ -166,7 +166,7 @@ plt.xlabel('Hour')
 plt.ylabel('Average Speed')
 plt.title('Average Speed by Hour')
 
-plt.savefig('speed_hour.png')
+plt.savefig('outputs/speed_hour.png')
 plt.close()
 
 #M3:预测模型
@@ -239,7 +239,7 @@ plt.plot(history.history['val_loss'])
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend(['Train', 'Validation'])
-plt.savefig('loss_curve.png')
+plt.savefig('outputs/loss_curve.png')
 plt.close()
 #测试集预测
 y_pred_nn = model.predict(X_test)
@@ -289,6 +289,8 @@ mae_values = [mae_rf, mae_nn]
 plt.bar(models, mae_values)
 plt.ylabel('MAE')
 plt.title('MAE')
+plt.savefig('outputs/mae_compare.png')
+plt.close()
 
 models = ['Random Forest', 'Neural Network']
 rmse_values = [rmse_rf, rmse_nn]
@@ -296,6 +298,8 @@ plt.figure(figsize=(6,5))
 plt.bar(models, rmse_values)
 plt.ylabel('RMSE')
 plt.title('RMSE')
+plt.savefig('outputs/rmse_compare.png')
+plt.close()
 
 #M4:问答接口
 
