@@ -1,0 +1,8 @@
+pandas
+pyarrow
+matplotlib
+tensorflow
+numpy
+scikit-learn
+keras
+openai
